@@ -1,0 +1,31 @@
+<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SocialFlow</title><style>
+body{font-family:system-ui,sans-serif;margin:0;background:#f5f6f8;color:#222}header{background:#111;color:#fff;padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+header b{margin-inline-end:auto}button,select{padding:6px 10px;border-radius:6px;border:0;cursor:pointer}
+.tag{background:#e0a800;color:#000;padding:2px 8px;border-radius:10px;font-size:12px}main{padding:12px;max-width:1100px;margin:auto}
+.grid{direction:ltr;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.day{background:#fff;min-height:84px;padding:4px;border-radius:6px;font-size:11px}.day h6{margin:0 0 3px;color:#888}
+.pill{display:block;border-radius:4px;color:#fff;padding:2px 4px;margin-bottom:2px;font-size:11px;cursor:pointer}
+.card{background:#fff;border-radius:8px;padding:10px;margin:8px 0;border-inline-start:6px solid #ccc}.card small{color:#666}
+.st-approved{outline:2px solid #2a9d4a}.st-hold{opacity:.6}.st-scheduled_external{background:#eef6ff}.badge{background:#2f7de1;color:#fff;border-radius:8px;padding:1px 7px;font-size:11px}.ok{background:#2a9d4a;color:#fff}.hd{background:#d9534f;color:#fff}
+</style><body><header><b>SocialFlow</b><span class="tag">DRY-RUN: لا نشر فعلي</span><select id="f"></select><button onclick="exp()">تصدير الحالة</button></header>
+<main><h3 id="m"></h3><div class="grid" id="cal"></div><h3>مولّد الكابشنز والهوكس</h3><div class=card>المشروع <select id=gb></select> العدد <input id=gn type=number value=5 style=width:50px> الموضوع <input id=gt style=width:50%> <button onclick=gen()>جهّز الطلب</button><pre id=go style=white-space:pre-wrap></pre><small>الكتابة بتتم بالذكاء الاصطناعي من فريقنا (بدون مفتاح مدفوع) وبتنزل في الطابور كمسودة.</small></div><h3>الطابور</h3><div id="q"></div></main>
+<script>
+const key='sf-status';let D,S=JSON.parse(localStorage.getItem(key)||'{}');
+const NW={instagram:'إنستجرام',tiktok:'تيك توك',youtube:'يوتيوب',facebook:'فيسبوك',x:'X (يدوي)'};
+fetch('queue.json').then(r=>r.json()).then(d=>{D=d;window.P=Object.fromEntries(d.posts.map(p=>[p.id,p]));gb.innerHTML=d.brands.map(b=>`<option value=${b.id}>${b.name}</option>`).join('');f.innerHTML='<option value="">كل المشاريع</option>'+d.brands.map(b=>`<option value=${b.id}>${b.name}</option>`).join('');f.onchange=draw;draw()});
+const bc=id=>D.brands.find(b=>b.id==id);const st=p=>S[p.id]||p.status;
+function set(id,v){S[id]=v;localStorage.setItem(key,JSON.stringify(S));draw()}
+function say(p,v){const t=(v=='approved'?'اعتمد':'أوقف')+' '+p.id+' ('+bc(p.brand).name+' '+NW[p.network]+' '+p.at.replace('T',' ')+')';navigator.clipboard&&navigator.clipboard.writeText(t);set(p.id,v);alert('اتحفظ هنا. ابعت لنا الرسالة دي ليتسجل في المنصة:\n'+t)}
+function gen(){const b=bc(gb.value);const t='اكتب '+gn.value+' كابشن وهوك لمشروع '+b.name+' عن: '+gt.value+'\nأسلوب البراند: '+b.voice;navigator.clipboard&&navigator.clipboard.writeText(t);go.textContent=t}
+function exp(){prompt('انسخ وابعته لنا',JSON.stringify(S))}
+let cur=null;function nav(k){cur=new Date(cur.getFullYear(),cur.getMonth()+k,1);draw()}
+function draw(){const ps=D.posts.filter(p=>!f.value||p.brand==f.value).sort((a,b)=>a.at.localeCompare(b.at));
+if(!cur){const t=ps[0]?new Date(ps[0].at):new Date();cur=new Date(t.getFullYear(),t.getMonth(),1)}
+const s=cur,y=s.getFullYear(),mo=String(s.getMonth()+1).padStart(2,'0');
+m.innerHTML=`<button onclick="nav(-1)">›</button> ${s.toLocaleDateString('ar-EG',{month:'long',year:'numeric'})} <button onclick="nav(1)">‹</button>`;
+const n=new Date(y,s.getMonth()+1,0).getDate();let h='';for(let i=0;i<s.getDay();i++)h+='<div></div>';
+for(let d=1;d<=n;d++){const ds=`${y}-${mo}-${String(d).padStart(2,'0')}`;
+h+=`<div class=day><h6>${d}</h6>${ps.filter(p=>p.at.startsWith(ds)).map(p=>`<a class=pill style="background:${bc(p.brand).color}" href="#${p.id}">${p.at.slice(11)} ${NW[p.network].split(' ')[0]}</a>`).join('')}</div>`}
+cal.innerHTML=h;
+q.innerHTML=ps.map(p=>`<div class="card st-${st(p)}" id=${p.id} style="border-color:${bc(p.brand).color}"><b>${bc(p.brand).name}</b> · ${NW[p.network]} · ${p.at.replace('T',' ')} · <small>${st(p)}</small>${st(p)=='scheduled_external'?' <span class=badge>مجدول خارجياً</span>':''}${p.sample?' <span class=badge style=background:#999>نموذج</span>':''}<p>${p.hook?'<b>'+p.hook+'</b><br>':''}${p.caption}</p><small>${p.video}${p.note?' · '+p.note:''}</small><br><button class=ok onclick="say(P['${p.id}'],'approved')">موافقة</button> <button class=hd onclick="say(P['${p.id}'],'hold')">إيقاف</button></div>`).join('')}
+</script></body></html>

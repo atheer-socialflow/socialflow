@@ -1,0 +1,106 @@
+{
+ "brands": [
+  {
+   "id": "demoa",
+   "name": "Demo Brand A",
+   "color": "#b08d57",
+   "voice": "Sample voice: elegant, short."
+  },
+  {
+   "id": "demob",
+   "name": "Demo Brand B",
+   "color": "#2f7de1",
+   "voice": "Sample voice: friendly, casual."
+  }
+ ],
+ "posts": [
+  {
+   "id": "demo-1",
+   "brand": "demoa",
+   "network": "instagram",
+   "at": "2026-12-01T18:00",
+   "caption": "[SAMPLE] Example caption 1",
+   "hook": "Example hook",
+   "video": "media/sample-1.mp4",
+   "status": "draft",
+   "sample": true
+  },
+  {
+   "id": "demo-2",
+   "brand": "demob",
+   "network": "tiktok",
+   "at": "2026-12-02T19:00",
+   "caption": "[SAMPLE] Example caption 2",
+   "hook": "Example hook",
+   "video": "media/sample-2.mp4",
+   "status": "approved",
+   "sample": true
+  },
+  {
+   "id": "demo-3",
+   "brand": "demoa",
+   "network": "youtube",
+   "at": "2026-12-03T20:00",
+   "caption": "[SAMPLE] Example caption 3",
+   "hook": "Example hook",
+   "video": "media/sample-3.mp4",
+   "status": "hold",
+   "sample": true
+  },
+  {
+   "id": "demo-4",
+   "brand": "demob",
+   "network": "facebook",
+   "at": "2026-12-04T18:00",
+   "caption": "[SAMPLE] Example caption 4",
+   "hook": "Example hook",
+   "video": "media/sample-4.mp4",
+   "status": "scheduled_external",
+   "sample": true
+  },
+  {
+   "id": "demo-5",
+   "brand": "demoa",
+   "network": "instagram",
+   "at": "2026-12-05T19:00",
+   "caption": "[SAMPLE] Example caption 5",
+   "hook": "Example hook",
+   "video": "media/sample-5.mp4",
+   "status": "draft",
+   "sample": true
+  },
+  {
+   "id": "demo-6",
+   "brand": "demob",
+   "network": "tiktok",
+   "at": "2026-12-01T20:00",
+   "caption": "[SAMPLE] Example caption 6",
+   "hook": "Example hook",
+   "video": "media/sample-6.mp4",
+   "status": "approved",
+   "sample": true
+  },
+  {
+   "id": "demo-7",
+   "brand": "demoa",
+   "network": "youtube",
+   "at": "2026-12-02T18:00",
+   "caption": "[SAMPLE] Example caption 7",
+   "hook": "Example hook",
+   "video": "media/sample-7.mp4",
+   "status": "hold",
+   "sample": true
+  },
+  {
+   "id": "demo-8",
+   "brand": "demob",
+   "network": "facebook",
+   "at": "2026-12-03T19:00",
+   "caption": "[SAMPLE] Example caption 8",
+   "hook": "Example hook",
+   "video": "media/sample-8.mp4",
+   "status": "scheduled_external",
+   "sample": true
+  }
+ ]
+}
