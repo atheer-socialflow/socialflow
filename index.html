@@ -75,7 +75,7 @@ textarea{min-height:110px;resize:vertical}
 .toast{position:fixed;bottom:22px;inset-inline-start:22px;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:20}
 .toast.on{opacity:1}
 @media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto}.cols{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
-</style>
+.frame{border-radius:14px;overflow:hidden;background:#000;position:relative;margin:6px auto;border:1px solid var(--line)}.play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:34px;text-shadow:0 2px 8px #000}.up{border:1px dashed var(--line);border-radius:12px;padding:10px}.addhint{opacity:0;color:var(--mute);font-size:12px;margin-top:4px}.day:hover .addhint{opacity:1}.gd{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.gi{display:flex;gap:8px;align-items:flex-start;padding:3px 0;color:var(--bad)}.gi.ok{color:var(--ok)}.gi>div{color:var(--ink)}.tg{color:var(--mute);font-size:11px}.gd a{color:var(--brand)}</style>
 </head>
 <body>
 <div class="app">
@@ -130,10 +130,10 @@ const accOf=id=>S.accounts.find(a=>a.id===id);
 function render(){
  document.documentElement.dataset.theme=S.theme;
  $('#projs').innerHTML=S.projects.map(p=>`<button class="proj ${p.id===S.cur?'on':''}" onclick="setProj('${p.id}')"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('');
- const items=[['cal','▦','التقويم'],['queue','☰','الطابور والموافقات'],['acc','◎','الحسابات'],['range','↻','جدولة على فترة'],['plan','i','حدود العرض']];
+ const items=[['cal','▦','التقويم'],['queue','☰','الطابور والموافقات'],['account','◉','صفحة الحساب'],['acc','◎','الحسابات'],['range','↻','جدولة على فترة'],['plan','i','حدود العرض']];
  $('#nav').innerHTML=items.map(([k,i,t])=>`<button class="${S.view===k?'on':''}" onclick="nav('${k}')">${i} ${t}</button>`).join('');
  $('#title').textContent=P().name;
- ({cal:vCal,queue:vQueue,acc:vAcc,range:vRange,plan:vPlan})[S.view]();
+ ({cal:vCal,queue:vQueue,account:vAccount,acc:vAcc,range:vRange,plan:vPlan})[S.view]();
 }
 function stats(){const p=postsOf();const c=s=>p.filter(x=>x.st===s).length;return `<div class="stats"><div class="card stat"><b>${p.length}</b><span>كل البوستات</span></div><div class="card stat"><b>${c('draft')}</b><span>مسودات تنتظر موافقتك</span></div><div class="card stat"><b>${c('approved')}</b><span>موافق عليها</span></div><div class="card stat"><b>${S.accounts.filter(a=>a.p===pid()).length}</b><span>حسابات</span></div></div>`}
 function modeSeg(){return `<div class="seg">${[['month','شهر'],['week','أسبوع'],['day','يوم'],['list','قائمة']].map(([k,t])=>`<button class="${S.mode===k?'on':''}" onclick="S.mode='${k}';S.off=0;save();render()">${t}</button>`).join('')}</div>`}
@@ -176,7 +176,7 @@ function vQueue(){
  $('#view').innerHTML=stats()+`<div class="card"><div class="cal-h"><h2>الطابور</h2><div class="seg">${['all','draft','approved','hold'].map(k=>`<button class="${qf===k?'on':''}" onclick="qf='${k}';render()">${k==='all'?'الكل':ST[k]}</button>`).join('')}</div><button class="btn sm ok" onclick="approveAll()">وافق على كل المسودات</button></div>${l.length?l.map(postRow).join(''):'<div class="empty">لا يوجد بوستات هنا. ابدأ بـ "+ بوست جديد".</div>'}<div class="note">الموافقة تحفظ الحالة فقط. لا يتم نشر أي شيء قبل ربط الحساب وتفعيل النشر بموافقتك.</div></div>`}
 function vAcc(){
  const l=S.accounts.filter(a=>a.p===pid());
- $('#view').innerHTML=`<div class="card"><div class="cal-h"><h2>حسابات ${esc(P().name)}</h2></div>${l.map(a=>`<div class="acc"><div class="net" style="background:${NET[a.net].c}">${NET[a.net].s}</div><div style="flex:1"><b>${NET[a.net].n}</b> ${esc(a.h)}<div class="note">${a.st==='sample'?'حساب تجريبي، غير متصل':a.st==='pending'?'بانتظار ربط OAuth (يحتاج موافقتك من موبايلك)':''} ${NET[a.net].manual?'· النشر يدوي بمساعدة التطبيق':'· نشر تلقائي بعد الربط والموافقة'}</div></div><button class="btn sm bad" onclick="delAcc('${a.id}')">إزالة</button></div>`).join('')||'<div class="empty">لا توجد حسابات بعد.</div>'}
+ $('#view').innerHTML=`<div class="card"><div class="cal-h"><h2>حسابات ${esc(P().name)}</h2></div>${l.map(a=>`<div class="acc"><div class="net" style="background:${NET[a.net].c}">${NET[a.net].s}</div><div style="flex:1"><b>${NET[a.net].n}</b> ${esc(a.h)}<div class="note">${a.st==='sample'?'حساب تجريبي، غير متصل':a.st==='pending'?'بانتظار ربط OAuth (يحتاج موافقتك من موبايلك)':''} ${NET[a.net].manual?'· النشر يدوي بمساعدة التطبيق':'· نشر تلقائي بعد الربط والموافقة'}</div></div><button class="btn sm" onclick="openAcct('${a.id}')">فتح صفحة الحساب</button> <button class="btn sm bad" onclick="delAcc('${a.id}')">إزالة</button></div>`).join('')||'<div class="empty">لا توجد حسابات بعد.</div>'}
  <h3 style="margin-top:20px">اربط حساب جديد</h3><div class="chips">${Object.entries(NET).map(([k,v])=>`<button class="chs" onclick="addAcc('${k}')"><span class="net" style="background:${v.c};width:26px;height:26px;border-radius:8px;font-size:10px">${v.s}</span>${v.n}${v.manual?' (يدوي)':''}</button>`).join('')}</div>
  <div class="note">عدد غير محدود من الحسابات لكل منصة. في هذا العرض التجريبي الزر يسجّل حسابًا "بانتظار الربط" فقط ولا يتصل بأي منصة. الربط الفعلي عبر OAuth الرسمي سيُضاف مع النسخة الخاصة.</div></div>`}
 function addAcc(net){const h=prompt('اسم الحساب أو @handle');if(!h)return;S.accounts.push({id:uid(),p:pid(),net,h,st:'pending'});save();render();toast('أُضيف الحساب بحالة: بانتظار الربط')}
@@ -207,10 +207,87 @@ function rPrev(){const{ids,out}=rPlan();let c=0;out.forEach(at=>{if(S.posts.some
 function makeRange(){
  const{ids,out}=rPlan();const cap=$('#rCap').value.trim();if(!ids.length)return toast('اختر حسابًا واحدًا على الأقل');if(!out.length)return toast('لا مواعيد ناتجة');if(!cap)return toast('اكتب النص');
  out.forEach(at=>S.posts.push({id:uid(),p:pid(),a:ids,at,cap,hook:'',st:'draft'}));save();S.view='queue';render();toast('تم إنشاء '+out.length+' مسودة. راجعها ووافق')}
-function vPlan(){$('#view').innerHTML=`<div class="card" style="max-width:760px"><h2 style="margin-top:0">حدود هذا العرض</h2><ul style="line-height:2"><li>هذه نسخة تجريبية ببيانات وهمية. تُحفظ في متصفحك فقط.</li><li>لا يوجد نشر فعلي. كل شيء DRY-RUN.</li><li>تيك توك وX: النشر يدوي بمساعدة التطبيق (قيود المنصتين).</li><li>إنستجرام وفيسبوك ويوتيوب: يحتاج ربط OAuth بموافقتك مرة واحدة لكل حساب.</li><li>المشاريع والحسابات والجدولة على أي فترة: متاحة هنا.</li></ul></div>`}
+function vPlan(){$('#view').innerHTML=`<div class="card" style="max-width:760px"><h2 style="margin-top:0">حدود هذا العرض</h2><ul style="line-height:2"><li><b>تصميم التخزين (لم يُبنَ بعد):</b> الملف يبقى في التخزين فقط حتى ينشر بنجاح ثم يُحذف تلقائيًا. الأصول تُحفظ في Google Drive الخاص بك (15GB مشتركة مع Gmail)، والمنصة تسحب كل ملف قبل موعده بوقت قصير، فلا يوجد في التخزين المجاني إلا بوستات الأيام القادمة. يوتيوب: رفع مباشر بجدولة publishAt بدون تخزين عندنا.</li><li>هذه نسخة تجريبية ببيانات وهمية. تُحفظ في متصفحك فقط.</li><li>لا يوجد نشر فعلي. كل شيء DRY-RUN.</li><li>تيك توك وX: النشر يدوي بمساعدة التطبيق (قيود المنصتين).</li><li>إنستجرام وفيسبوك ويوتيوب: يحتاج ربط OAuth بموافقتك مرة واحدة لكل حساب.</li><li>المشاريع والحسابات والجدولة على أي فترة: متاحة هنا.</li></ul></div>`}
 // composer
+
+// ---- formats & media ----
+const FM={instagram:[['reel','ريلز','9:16',1080,1920],['v45','فيد عمودي','4:5',1080,1350],['sq','مربع','1:1',1080,1080],['story','ستوري','9:16',1080,1920]],
+facebook:[['reel','ريلز','9:16',1080,1920],['sq','فيد مربع','1:1',1080,1080],['land','أفقي','16:9',1280,720],['v45','عمودي','4:5',1080,1350]],
+youtube:[['video','فيديو','16:9',1920,1080],['short','شورتس','9:16',1080,1920]],
+tiktok:[['vid','فيديو','9:16',1080,1920]],
+x:[['land','أفقي','16:9',1280,720],['sq','مربع','1:1',1080,1080]]};
+const MEDIA_OK={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'};
+const MAX_IMG=10*1024*1024,MAX_VID=500*1024*1024;
+const ratio=f=>{const [a,b]=f[2].split(':');return a/b};
+function fmtOf(a){const list=FM[a.net];cmp.fmt=cmp.fmt||{};let c=cmp.fmt[a.id];if(!c){let best=list[0];if(cmp.media){const r=cmp.media.w/cmp.media.h;best=list.reduce((p,q)=>Math.abs(ratio(q)-r)<Math.abs(ratio(p)-r)?q:p)}c=cmp.fmt[a.id]={f:best[0],fit:'cover'}}return c}
+function mediaBlock(){const m=cmp.media;return `<div class="up"><input type="file" id="cF" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" onchange="pickMedia(this.files[0])">${m?`<div class="row" style="margin-top:8px"><img src="${m.thumb}" style="height:48px;border-radius:8px"><span class="note">${m.kind==='video'?'فيديو':'صورة'} · ${m.w}×${m.h} · ${(m.size/1048576).toFixed(1)}MB · ${esc(m.name)}</span><button class="btn sm bad" onclick="cmp.media=null;cmp.fmt={};showComposer()">إزالة</button></div>`:''}<div class="note">سياسة التخزين المخططة: يُحذف الملف تلقائيًا بعد النشر الناجح، ويمكن سحبه من Drive قبل الموعد بقليل.</div><div class="note">JPG/PNG/WEBP حتى 10MB، MP4/MOV/WEBM حتى 500MB. في هذا العرض لا يُرفع الملف لأي سيرفر؛ يُقرأ في متصفحك فقط لإظهار المعاينة.</div></div>`}
+function pickMedia(f){if(!f)return;const ext=MEDIA_OK[f.type];if(!ext)return toast('نوع الملف غير مسموح');const vid=f.type.startsWith('video');if(f.size>(vid?MAX_VID:MAX_IMG))return toast('الملف أكبر من الحد المسموح');
+ const u=URL.createObjectURL(f);const done=(w,h,src)=>{const c=document.createElement('canvas');const k=Math.min(1,480/Math.max(w,h));c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(src,0,0,c.width,c.height);cmp.media={dur:vid?src.duration:0,kind:vid?'video':'image',name:uid()+uid()+'.'+ext,size:f.size,w,h,thumb:c.toDataURL('image/jpeg',.7)};cmp.fmt={};URL.revokeObjectURL(u);showComposer();toast('تمت إضافة الملف')};
+ if(vid){const v=document.createElement('video');v.muted=true;v.preload='metadata';v.onloadedmetadata=()=>{v.currentTime=Math.min(.5,v.duration/2||0)};v.onseeked=()=>done(v.videoWidth,v.videoHeight,v);v.onerror=()=>{URL.revokeObjectURL(u);toast('تعذر قراءة الفيديو')};v.src=u}
+ else{const im=new Image();im.onload=()=>done(im.naturalWidth,im.naturalHeight,im);im.onerror=()=>{URL.revokeObjectURL(u);toast('تعذر قراءة الصورة')};im.src=u}}
+function setFmt(id,f){cmp.fmt[id].f=f;pv()}
+function setFit(id,t){cmp.fmt[id].fit=t;pv()}
+function pvOne(a){const n=NET[a.net];const c=fmtOf(a);const F=FM[a.net].find(x=>x[0]===c.f)||FM[a.net][0];const r=ratio(F);const m=cmp.media;
+ let warn='';if(m){const mr=m.w/m.h;if(Math.abs(mr-r)/r>.04)warn=c.fit==='cover'?`الملف ${m.w}:${m.h} والصيغة ${F[2]}: سيتم قص الأطراف`:`الملف ${m.w}:${m.h} والصيغة ${F[2]}: ستظهر أشرطة فارغة`;else warn='النسبة مطابقة'}
+ const h=Math.min(260,Math.round(240/Math.max(r,.01)>260?260:240/r));const w=Math.round(h*r);
+ const inner=m?`<img src="${m.thumb}" style="width:100%;height:100%;object-fit:${c.fit}">${m.kind==='video'?'<span class="play">▶</span>':''}`:'<div class="vid" style="height:100%;margin:0">▶ مثال</div>';
+ return `<div class="mock"><div class="row"><span class="net" style="background:${n.c};width:28px;height:28px;font-size:10px">${n.s}</span><b>${esc(a.h)}</b></div>
+ <div class="chips" style="margin:8px 0">${FM[a.net].map(x=>`<div class="chs ${x[0]===c.f?'on':''}" onclick="setFmt('${a.id}','${x[0]}')">${x[1]} ${x[2]}</div>`).join('')}</div>
+ <div class="frame" style="width:${w}px;height:${h}px">${inner}</div>
+ <div class="note">${F[3]}×${F[4]} px (قياس شائع موصى به، راجعه قبل النشر)${warn?' · '+warn:''}</div>
+ ${m?`<div class="seg" style="margin:6px 0"><button class="${c.fit==='cover'?'on':''}" onclick="setFit('${a.id}','cover')">ملء (قص)</button><button class="${c.fit==='contain'?'on':''}" onclick="setFit('${a.id}','contain')">احتواء</button></div>`:''}
+ <b>${esc(cmp.hook)}</b><div>${esc(cmp.cap)||'<span class="note">...</span>'}</div>${guideBox(a,F)}${n.manual?'<div class="note">! النشر يدوي على هذه المنصة</div>':''}</div>`}
+
+// ---- virality guidance (guidance only, not guarantees) ----
+const SRC={instagram:[['Mosseri: watch time, likes, sends (Social Media Today)','https://more.you/blog/instagram-ranking-signals/'],['Buffer: Instagram algorithm','https://buffer.com/resources/instagram-algorithms/']],
+tiktok:[['Hootsuite: TikTok algorithm 2026','https://blog.hootsuite.com/tiktok-algorithm/'],['TikTok Newsroom summary (clautia)','https://clautia.com/blog/tiktok-algorithm']],
+youtube:[['YouTube: views and engaged views (Aug 2026)','https://blog.youtube/inside-youtube/engaged-views-youtube-explained/'],['Shorts title analysis (Returbe, Oct 2026)','https://returbe.com/blog/youtube-shorts-titles-that-go-viral']],
+facebook:[['Social Media Examiner: Facebook 2026 rules','https://www.socialmediaexaminer.com/facebooks-2026-rules-for-reach-relevance/'],['Meta original content definition (MediaPost)','https://www.mediapost.com/publications/article/413530/meta-defines-original-content-tests-protection.html']],
+x:[['X algorithm weights, Aug 2026 (PPC Land)','https://ppc.land/x-gives-copy-link-shares-a-feed-weight-of-20-against-0-5-for-likes/'],['xai-org/x-algorithm overview (aniya)','https://aniya.app/blog/how-the-x-algorithm-works']]};
+const nHash=t=>(t.match(/#[\p{L}\p{N}_]+/gu)||[]).length;
+function guide(a,F){const m=cmp.media,cap=cmp.cap||'',hk=cmp.hook||'',net=a.net,vert=ratio(F)<1;const it=[];
+ const add=(k,t,ok,fix,tag)=>it.push({k,t,ok,fix,tag});
+ add('media','فيه صورة أو فيديو مرفوع',!!m,'أضف فيديو أو صورة؛ البوست بدون ميديا نادرًا ينتشر','S');
+ if(m){const mr=m.w/m.h;add('ratio','نسبة الملف تناسب الصيغة المختارة',Math.abs(mr-ratio(F))/ratio(F)<=.04,'غيّر الصيغة أو صدّر الملف بنسبة '+F[2],'H')}
+ add('hook','الهوك موجود وقصير (60 حرف أو أقل)',hk.length>0&&hk.length<=60,'اكتب هوك واضح في أول سطر أقصر من 60 حرف','H');
+ if(net==='instagram'){add('v','ريلز عمودي 9:16',F[0]==='reel'||F[0]==='story','ريلز بنسبة 9:16 تتوزع لغير المتابعين أكثر (Reels له ترتيب خاص)','S');
+  add('send','الكابشن فيه دعوة للمشاركة/الإرسال لصديق',/ابعت|شير|شارك|منشن|send|share|tag/i.test(cap+hk),'أضف جملة تخلي الناس يبعتوه لصديق (Sends أهم لغير المتابعين)','S');
+  add('hash','هاشتاجات 5 أو أقل',nHash(cap)<=5,'قلل الهاشتاجات لأقل من 6 واختر المرتبطة فقط','H')}
+ if(net==='tiktok'){add('dur','الفيديو قصير (60 ثانية أو أقل)',m&&m.kind==='video'?m.dur<=60:null,'الفيديوهات الأقصر أسهل في الإكمال، والإكمال أهم إشارة حاليًا','S');
+  add('hash','هاشتاجات 3 إلى 5 مرتبطة',nHash(cap)>=1&&nHash(cap)<=5,'استخدم كلمات مفتاحية وهاشتاجات مرتبطة بالموضوع (TikTok يقرأ الكابشن والهاشتاجات)','S');
+  add('v','عمودي 9:16',true,'','H')}
+ if(net==='youtube'){add('title','العنوان 100 حرف أو أقل وبأسلوب كلام طبيعي',hk.length>0&&hk.length<=100,'اكتب عنوانًا يشبه تعليق صديق لا استعلام بحث (للشورتس)','S');
+  add('dur','المدة معروفة',m&&m.kind==='video'?true:null,'ارفع الفيديو لتظهر المدة','H')}
+ if(net==='facebook'){add('orig','المحتوى أصلي (مصوّر/منتج منك)',null,'ركّز على محتوى أصلي؛ Meta تعتبره إشارة في التوصيات','S');add('reel','ريلز عمودي لو الهدف اكتشاف',F[0]==='reel','فيسبوك ريلز يرتّب حسب مدة المشاهدة والإكمال','S')}
+ if(net==='x'){add('len','النص 280 حرف أو أقل',(hk+' '+cap).trim().length<=280,'اختصر النص','H');add('hash','هاشتاجات 2 أو أقل',nHash(cap)<=2,'X لا يكافئ كثرة الهاشتاجات؛ قللها','H');add('share','فيه سبب يخلي الناس يشاركوا/ينسخوا الرابط',null,'مشاركة الرابط لها أعلى وزن في ترتيب X المنشور (Aug 2026)','S')}
+ add('f3','أول 3 ثواني فيها الهوك البصري',null,'ابدأ بالنتيجة أو سؤال أو حركة، لا بمقدمة أو شعار','S');
+ add('thumb','الغلاف/اللقطة الأولى واضحة وفيها نص قصير',null,'اختر غلافًا واضحًا؛ يؤثر على نقرات الدخول للبروفايل والبحث','H');
+ add('time','وقت النشر مختار حسب نشاط جمهورك',null,'لا يوجد وقت عالمي أفضل؛ راجع إحصائيات حسابك (Insights) واختر وقت نشاط متابعيك','H');
+ return it}
+function tickChk(id,k){cmp.chk=cmp.chk||{};const key=id+':'+k;cmp.chk[key]=!cmp.chk[key];pv()}
+function guideBox(a,F){const it=guide(a,F);cmp.chk=cmp.chk||{};const val=x=>x.ok===null?!!cmp.chk[a.id+':'+x.k]:x.ok;
+ const done=it.filter(val).length;const sc=Math.round(done/it.length*100);
+ return `<div class="gd"><div class="row"><b>إرشادات الانتشار</b><span class="pill ${sc>=75?'s-approved':sc>=45?'s-draft':'s-hold'}">${done}/${it.length} · ${sc}%</span></div>
+ ${it.map(x=>{const v=val(x);return `<div class="gi ${v?'ok':''}">${x.ok===null?`<input type="checkbox" ${v?'checked':''} onchange="tickChk('${a.id}','${x.k}')">`:`<span>${v?'✓':'✗'}</span>`}<div>${x.t}${v?'':`<div class="note">${x.fix}</div>`}<small class="tg">${x.tag==='S'?'مبني على مصدر':'قاعدة عملية'}</small></div></div>`}).join('')}
+ <div class="note">إرشادات وليست ضمانات. النقاط مبنية على إشارات الترتيب المعلنة، و"قاعدة عملية" معناها اجتهاد شائع غير صادر من المنصة. المصادر: ${(SRC[a.net]||[]).map(x=>`<a href="${x[1]}" target="_blank" rel="noopener noreferrer">${x[0]}</a>`).join(' · ')}</div></div>`}
+// ---- per-account page ----
+function openAcct(id){S.acct=id;S.view='account';S.aoff=0;save();render()}
+function vAccount(){
+ const accs=S.accounts.filter(a=>a.p===pid());
+ if(!accs.length){$('#view').innerHTML='<div class="card"><div class="empty">لا حسابات في هذا المشروع. أضف حسابًا من صفحة الحسابات.</div></div>';return}
+ let a=accs.find(x=>x.id===S.acct)||accs[0];S.acct=a.id;const n=NET[a.net];
+ const base=new Date();const off=S.aoff||0;const st=new Date(base);st.setDate(base.getDate()-base.getDay()+7*off);
+ const names=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+ const mine=S.posts.filter(x=>x.a.includes(a.id));const byDay={};mine.forEach(x=>(byDay[x.at.slice(0,10)]||(byDay[x.at.slice(0,10)]=[])).push(x));
+ const today=dkey(new Date());let days='';
+ for(let i=0;i<7;i++){const d=new Date(st);d.setDate(st.getDate()+i);const k=dkey(d);days+=`<div class="day ${k===today?'today':''}" ondragover="event.preventDefault()" ondrop="dropOn('${k}')" onclick="openComposer('${k}','${a.id}')"><b>${names[d.getDay()]} ${d.getDate()}</b><br>${(byDay[k]||[]).sort((p,q)=>p.at<q.at?-1:1).map(chip).join('')}<div class="addhint">+ أضف</div></div>`}
+ const c=(s)=>mine.filter(x=>x.st===s).length;
+ $('#view').innerHTML=`<div class="card"><div class="row" style="flex-wrap:wrap"><div class="net" style="background:${n.c};width:44px;height:44px">${n.s}</div><div style="flex:1"><h2 style="margin:0">${esc(a.h)}</h2><div class="note">${n.n}${n.manual?' · نشر يدوي':''} · ${mine.length} بوست · ${c('approved')} موافق عليه · ${c('draft')} مسودة</div></div><button class="btn pri" onclick="openComposer(null,'${a.id}')">+ بوست لهذا الحساب</button></div>
+ <div class="chips" style="margin-top:12px">${accs.map(x=>`<div class="chs ${x.id===a.id?'on':''}" onclick="openAcct('${x.id}')">${NET[x.net].s} ${esc(x.h)}</div>`).join('')}</div></div>
+ <div class="card" style="margin-top:16px"><div class="cal-h"><button class="btn sm" onclick="S.aoff=(S.aoff||0)-1;save();render()">›</button><h2>أسبوع ${st.toLocaleDateString('ar-EG',{day:'numeric',month:'long'})}</h2><button class="btn sm" onclick="S.aoff=(S.aoff||0)+1;save();render()">‹</button></div><div class="wk">${days}</div><div class="note">اضغط على أي يوم لجدولة بوست لهذا الحساب، أو اسحب بوست لتغيير يومه.</div></div>
+ <div class="card" style="margin-top:16px"><h3 style="margin-top:0">كل بوستات الحساب</h3>${mine.length?mine.sort((p,q)=>p.at<q.at?-1:1).map(postRow).join(''):'<div class="empty">لا بوستات لهذا الحساب بعد.</div>'}</div>`}
 let cmp=null;
-function openComposer(day){cmp={id:null,a:[],at:(day||dkey(new Date()))+'T19:00',cap:'',hook:'',st:'draft'};showComposer()}
+function openComposer(day,acct){cmp={id:null,a:acct?[acct]:[],at:(day||dkey(new Date()))+'T19:00',cap:'',hook:'',st:'draft',media:null,fmt:{}};showComposer()}
 function openPost(id){cmp=JSON.parse(JSON.stringify(S.posts.find(x=>x.id===id)));showComposer()}
 function showComposer(){
  const accs=S.accounts.filter(a=>a.p===pid());
@@ -218,13 +295,13 @@ function showComposer(){
  <label>الحسابات</label><div class="chips">${accs.map(a=>`<div class="chs ${cmp.a.includes(a.id)?'on':''}" onclick="tg('${a.id}')">${NET[a.net].n} ${esc(a.h)}</div>`).join('')||'<span class="note">لا حسابات. أضف من صفحة الحسابات.</span>'}</div>
  <label>الهوك (أول سطر)</label><input id="cH" value="${esc(cmp.hook)}" oninput="cmp.hook=this.value;pv()">
  <label>الكابشن</label><textarea id="cC" oninput="cmp.cap=this.value;pv()">${esc(cmp.cap)}</textarea>
- <div class="row"><button class="btn sm" onclick="suggest()">اقتراح هوكات (قوالب)</button></div>
+ <label>الصورة / الفيديو</label>${mediaBlock()}<div class="row"><button class="btn sm" onclick="suggest()">اقتراح هوكات (قوالب)</button></div>
  <label>الموعد</label><input type="datetime-local" id="cA" value="${cmp.at}" onchange="cmp.at=this.value">
  <div class="row" style="margin-top:16px"><button class="btn pri" onclick="saveP('draft')">حفظ كمسودة</button><button class="btn ok" onclick="saveP('approved')">موافقة وجدولة</button>${cmp.id?'<button class="btn bad" onclick="delPost(cmp.id);closeM()">حذف</button>':''}</div></div>
  <div class="prev"><b>معاينة</b><div id="pv"></div></div></div>`;
  $('#modal').classList.add('on');pv()}
 function tg(id){cmp.a=cmp.a.includes(id)?cmp.a.filter(x=>x!==id):[...cmp.a,id];showComposer()}
-function pv(){const el=$('#pv');if(!el)return;const l=cmp.a.map(accOf).filter(Boolean);el.innerHTML=l.length?l.map(a=>`<div class="mock"><div class="row"><span class="net" style="background:${NET[a.net].c};width:28px;height:28px;font-size:10px">${NET[a.net].s}</span><b>${esc(a.h)}</b></div><div class="vid">▶ فيديو</div><b>${esc(cmp.hook)}</b><div>${esc(cmp.cap)||'<span class="note">...</span>'}</div>${NET[a.net].manual?'<div class="note">! النشر يدوي على هذه المنصة</div>':''}</div>`).join(''):'<div class="empty">اختر حسابًا لترى المعاينة</div>'}
+function pv(){const el=$('#pv');if(!el)return;const l=cmp.a.map(accOf).filter(Boolean);el.innerHTML=l.length?l.map(pvOne).join(''):'<div class="empty">اختر حسابًا لترى المعاينة</div>'}
 function suggest(){const t=['٣ حاجات محدش قالك عليها عن ...','لو بتعمل ده غلط، وقف دلوقتي','السر اللي خلى النتيجة تتغير في أسبوع','قبل ما تكمل، شوف الفيديو ده'];cmp.hook=t[Math.floor(Math.random()*t.length)];showComposer();toast('قوالب جاهزة. الاقتراح بالذكاء الاصطناعي يأتي مع النسخة الخاصة')}
 function shareLink(id){const x=S.posts.find(p=>p.id===id);const o={c:x.cap,h:x.hook,at:x.at,n:x.a.map(accOf).filter(Boolean).map(a=>a.net)};const u=location.origin+location.pathname+'#preview='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));navigator.clipboard&&navigator.clipboard.writeText(u);toast('تم نسخ رابط المعاينة (يعرض هذا البوست فقط)')}
 function saveP(st){if(!cmp.a.length)return toast('اختر حسابًا');if(!cmp.cap.trim()&&!cmp.hook.trim())return toast('اكتب النص');cmp.st=st;cmp.p=pid();if(conflicts(cmp).length&&!confirm('يوجد بوست آخر لنفس الحساب في نفس الوقت. متابعة؟'))return;if(cmp.id){S.posts=S.posts.map(x=>x.id===cmp.id?cmp:x)}else{cmp.id=uid();S.posts.push(cmp)}save();closeM();render();toast(st==='approved'?'تمت الموافقة. لن ينشر شيء قبل تفعيل النشر':'تم الحفظ كمسودة')}
