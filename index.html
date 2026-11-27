@@ -136,25 +136,36 @@ function render(){
  ({cal:vCal,queue:vQueue,acc:vAcc,range:vRange,plan:vPlan})[S.view]();
 }
 function stats(){const p=postsOf();const c=s=>p.filter(x=>x.st===s).length;return `<div class="stats"><div class="card stat"><b>${p.length}</b><span>كل البوستات</span></div><div class="card stat"><b>${c('draft')}</b><span>مسودات تنتظر موافقتك</span></div><div class="card stat"><b>${c('approved')}</b><span>موافق عليها</span></div><div class="card stat"><b>${S.accounts.filter(a=>a.p===pid()).length}</b><span>حسابات</span></div></div>`}
-function chip(x){const a=accOf(x.a[0]);const n=NET[a?.net]||{c:'#888',s:'?'};const t=x.at.slice(11,16);return `<div class="chip ${x.st}" style="background:${n.c}" onclick="event.stopPropagation();openPost('${x.id}')">${t} ${n.s}${x.a.length>1?' +'+(x.a.length-1):''}</div>`}
+function modeSeg(){return `<div class="seg">${[['month','شهر'],['week','أسبوع'],['day','يوم'],['list','قائمة']].map(([k,t])=>`<button class="${S.mode===k?'on':''}" onclick="S.mode='${k}';S.off=0;save();render()">${t}</button>`).join('')}</div>`}
+function chip(x){const a=accOf(x.a[0]);const n=NET[a?.net]||{c:'#888',s:'?'};const t=x.at.slice(11,16);return `<div class="chip ${x.st}" draggable="true" ondragstart="dragId='${x.id}'" style="background:${n.c}" onclick="event.stopPropagation();openPost('${x.id}')">${t} ${n.s}${x.a.length>1?' +'+(x.a.length-1):''}</div>`}
+let dragId=null;
+function dropOn(k){if(!dragId)return;const x=S.posts.find(p=>p.id===dragId);dragId=null;if(!x)return;const old=x.at;x.at=k+'T'+x.at.slice(11,16);const c=conflicts(x);save();render();toast(c?'تم النقل. تنبيه: يوجد بوست آخر بنفس الحساب والوقت':'تم نقل البوست إلى '+k)}
+function conflicts(x){return S.posts.filter(y=>y.id!==x.id&&y.at===x.at&&y.a.some(q=>x.a.includes(q)))}
 function vCal(){
  const base=new Date();let html=stats();
- const mode=S.mode;let label='',cells='';
  const names=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
  const byDay={};postsOf().forEach(x=>(byDay[x.at.slice(0,10)]||(byDay[x.at.slice(0,10)]=[])).push(x));
- const today=dkey(new Date());
+ const today=dkey(new Date());const mode=S.mode;let label='',body='';
+ const dc=(k,inner,cls)=>`<div class="day ${cls||''} ${k===today?'today':''}" ondragover="event.preventDefault()" ondrop="dropOn('${k}')" onclick="openComposer('${k}')">${inner}</div>`;
+ const nav=(l)=>`<button class="btn sm" onclick="S.off--;save();render()">›</button><h2>${l}</h2><button class="btn sm" onclick="S.off++;save();render()">‹</button>`;
  if(mode==='month'){
   const m=new Date(base.getFullYear(),base.getMonth()+S.off,1);label=m.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
   const start=new Date(m);start.setDate(1-m.getDay());
-  cells=names.map(n=>`<div class="dow">${n}</div>`).join('');
-  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=dkey(d);cells+=`<div class="day ${d.getMonth()!==m.getMonth()?'out':''} ${k===today?'today':''}" onclick="openComposer('${k}')"><small>${d.getDate()}</small>${(byDay[k]||[]).map(chip).join('')}</div>`}
-  html+=`<div class="card"><div class="cal-h"><button class="btn sm" onclick="S.off--;save();render()">›</button><h2>${label}</h2><button class="btn sm" onclick="S.off++;save();render()">‹</button><div class="seg"><button class="on">شهر</button><button onclick="S.mode='week';S.off=0;save();render()">أسبوع</button></div></div><div class="grid">${cells}</div></div>`;
+  body='<div class="grid">'+names.map(n=>`<div class="dow">${n}</div>`).join('');
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=dkey(d);body+=dc(k,`<small>${d.getDate()}</small>${(byDay[k]||[]).map(chip).join('')}`,d.getMonth()!==m.getMonth()?'out':'')}
+  body+='</div>';
+ }else if(mode==='week'){
+  const st=new Date(base);st.setDate(base.getDate()-base.getDay()+7*S.off);label='أسبوع '+st.toLocaleDateString('ar-EG',{day:'numeric',month:'long'});
+  body='<div class="wk">';for(let i=0;i<7;i++){const d=new Date(st);d.setDate(st.getDate()+i);const k=dkey(d);body+=dc(k,`<b>${names[d.getDay()]} ${d.getDate()}</b><br>${(byDay[k]||[]).sort((a,b)=>a.at<b.at?-1:1).map(chip).join('')}`)}body+='</div>';
+ }else if(mode==='day'){
+  const d=new Date(base);d.setDate(base.getDate()+S.off);const k=dkey(d);label=d.toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'});
+  const l=(byDay[k]||[]).sort((a,b)=>a.at<b.at?-1:1);
+  body=l.length?l.map(postRow).join(''):`<div class="empty">لا بوستات في هذا اليوم.<br><br><button class="btn pri" onclick="openComposer('${k}')">+ أضف بوست لهذا اليوم</button></div>`;
  }else{
-  const st=new Date(base);st.setDate(base.getDate()-base.getDay()+7*S.off);
-  label='أسبوع '+st.toLocaleDateString('ar-EG',{day:'numeric',month:'long'});
-  for(let i=0;i<7;i++){const d=new Date(st);d.setDate(st.getDate()+i);const k=dkey(d);cells+=`<div class="day ${k===today?'today':''}" onclick="openComposer('${k}')"><b>${names[d.getDay()]} ${d.getDate()}</b><br>${(byDay[k]||[]).sort((a,b)=>a.at<b.at?-1:1).map(chip).join('')}</div>`}
-  html+=`<div class="card"><div class="cal-h"><button class="btn sm" onclick="S.off--;save();render()">›</button><h2>${label}</h2><button class="btn sm" onclick="S.off++;save();render()">‹</button><div class="seg"><button onclick="S.mode='month';S.off=0;save();render()">شهر</button><button class="on">أسبوع</button></div></div><div class="wk">${cells}</div></div>`;
+  label='كل البوستات القادمة';const l=postsOf().sort((a,b)=>a.at<b.at?-1:1);
+  body=l.length?l.map(postRow).join(''):'<div class="empty">لا بوستات بعد.</div>';
  }
+ html+=`<div class="card"><div class="cal-h">${mode==='list'?'<h2>'+label+'</h2>':nav(label)}${modeSeg()}</div>${body}${mode==='month'||mode==='week'?'<div class="note">اسحب أي بوست وأفلته على يوم آخر لتغيير موعده.</div>':''}</div>`;
  $('#view').innerHTML=html;
 }
 function postRow(x){const a=x.a.map(accOf).filter(Boolean);const n=NET[a[0]?.net]||{c:'#888',s:'?'};
@@ -172,18 +183,30 @@ function addAcc(net){const h=prompt('اسم الحساب أو @handle');if(!h)re
 function delAcc(id){S.accounts=S.accounts.filter(a=>a.id!==id);save();render()}
 function vRange(){
  const accs=S.accounts.filter(a=>a.p===pid());const t=dkey(new Date());
- $('#view').innerHTML=`<div class="card" style="max-width:720px"><h2 style="margin-top:0">جدولة سلسلة بوستات على فترة</h2><div class="note">اختر المدة بحرية: أسبوع، 10 أيام، شهر، أو أي رقم. تُنشأ كمسودات لازم توافق عليها.</div>
- <label>الحسابات</label><div class="chips" id="rAcc">${accs.map(a=>`<div class="chs" data-id="${a.id}" onclick="this.classList.toggle('on')">${NET[a.net].n} ${esc(a.h)}</div>`).join('')||'<span class="note">أضف حسابًا أولًا</span>'}</div>
- <div class="cols"><div><label>تاريخ البداية</label><input type="date" id="rStart" value="${t}"></div><div><label>عدد الأيام</label><input type="number" id="rDays" min="1" max="365" value="10"></div></div>
- <div class="cols"><div><label>كل كم يوم بوست</label><input type="number" id="rEvery" min="1" value="1"></div><div><label>الوقت</label><input type="time" id="rTime" value="19:00"></div></div>
+ const wd=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+ $('#view').innerHTML=`<div class="card" style="max-width:760px"><h2 style="margin-top:0">جدولة سلسلة بوستات على فترة</h2><div class="note">اختر المدة والأيام والأوقات بحرية. تُنشأ كمسودات لازم توافق عليها، وتظهر لك المعاينة والتعارضات قبل الإنشاء.</div>
+ <label>الحسابات</label><div class="chips" id="rAcc">${accs.map(a=>`<div class="chs" data-id="${a.id}" onclick="this.classList.toggle('on');rPrev()">${NET[a.net].n} ${esc(a.h)}</div>`).join('')||'<span class="note">أضف حسابًا أولًا</span>'}</div>
+ <div class="cols"><div><label>تاريخ البداية</label><input type="date" id="rStart" value="${t}" onchange="rPrev()"></div><div><label>عدد الأيام (أو نهاية الفترة)</label><input type="number" id="rDays" min="1" max="365" value="10" oninput="rPrev()"></div></div>
+ <label>أيام الأسبوع</label><div class="chips" id="rWd">${wd.map((n,i)=>`<div class="chs on" data-d="${i}" onclick="this.classList.toggle('on');rPrev()">${n}</div>`).join('')}</div>
+ <div class="cols"><div><label>الأوقات في اليوم (افصل بفاصلة)</label><input id="rTimes" value="19:00" oninput="rPrev()" placeholder="09:00, 14:00, 20:00"></div><div><label>تخطي تواريخ (YYYY-MM-DD بفاصلة)</label><input id="rSkip" oninput="rPrev()" placeholder="2026-12-25, 2026-12-31"></div></div>
  <label>النص الأساسي (يمكنك تعديل كل بوست لاحقًا)</label><textarea id="rCap" placeholder="اكتب الكابشن..."></textarea>
- <div class="row" style="margin-top:14px"><button class="btn pri" onclick="makeRange()">أنشئ السلسلة</button><button class="btn" onclick="preset(7)">أسبوع</button><button class="btn" onclick="preset(10)">10 أيام</button><button class="btn" onclick="preset(30)">شهر</button></div></div>`}
-function preset(n){$('#rDays').value=n}
+ <div class="row" style="margin-top:10px"><button class="btn" onclick="preset(7)">أسبوع</button><button class="btn" onclick="preset(10)">10 أيام</button><button class="btn" onclick="preset(30)">شهر</button></div>
+ <div class="prev" style="margin-top:14px" id="rPv"></div>
+ <div class="row" style="margin-top:14px"><button class="btn pri" onclick="makeRange()">أنشئ السلسلة</button></div></div>`;rPrev()}
+function preset(n){$('#rDays').value=n;rPrev()}
+function rPlan(){
+ const ids=[...document.querySelectorAll('#rAcc .on')].map(e=>e.dataset.id);
+ const s=$('#rStart').value,n=+$('#rDays').value;const wds=[...document.querySelectorAll('#rWd .on')].map(e=>+e.dataset.d);
+ const times=$('#rTimes').value.split(',').map(x=>x.trim()).filter(x=>/^\d{1,2}:\d{2}$/.test(x)).map(x=>x.padStart(5,'0'));
+ const skip=$('#rSkip').value.split(',').map(x=>x.trim()).filter(Boolean);
+ const out=[];if(!s||!n)return{ids,out};const d0=new Date(s+'T00:00:00');
+ for(let i=0;i<n;i++){const d=new Date(d0);d.setDate(d0.getDate()+i);const k=dkey(d);if(!wds.includes(d.getDay())||skip.includes(k))continue;times.forEach(t=>out.push(k+'T'+t))}
+ return{ids,out}}
+function rPrev(){const{ids,out}=rPlan();let c=0;out.forEach(at=>{if(S.posts.some(y=>y.at===at&&y.a.some(q=>ids.includes(q))))c++});
+ $('#rPv').innerHTML=out.length?`<b>سيتم إنشاء ${out.length} بوست</b> من ${out[0].replace('T',' ')} إلى ${out[out.length-1].replace('T',' ')}${c?`<div style="color:var(--bad);margin-top:6px">تنبيه: ${c} موعد يتعارض مع بوستات موجودة لنفس الحساب</div>`:'<div class="note">لا تعارضات.</div>'}<div class="chips" style="margin-top:8px">${out.slice(0,12).map(a=>`<span class="pill s-draft">${a.slice(5,10)} ${a.slice(11)}</span>`).join('')}${out.length>12?'<span class="note">...</span>':''}</div>`:'<span class="note">اختر أيامًا وأوقاتًا لتظهر المعاينة</span>'}
 function makeRange(){
- const ids=[...document.querySelectorAll('#rAcc .on')].map(e=>e.dataset.id);if(!ids.length)return toast('اختر حسابًا واحدًا على الأقل');
- const s=$('#rStart').value,n=+$('#rDays').value,e=+$('#rEvery').value||1,t=$('#rTime').value||'19:00',cap=$('#rCap').value.trim();if(!s||!n||!cap)return toast('أكمل التاريخ والمدة والنص');
- let c=0;const d0=new Date(s+'T00:00:00');for(let i=0;i<n;i+=e){const d=new Date(d0);d.setDate(d0.getDate()+i);S.posts.push({id:uid(),p:pid(),a:ids,at:dkey(d)+'T'+t,cap,hook:'',st:'draft'});c++}
- save();S.view='queue';render();toast('تم إنشاء '+c+' مسودة. راجعها ووافق')}
+ const{ids,out}=rPlan();const cap=$('#rCap').value.trim();if(!ids.length)return toast('اختر حسابًا واحدًا على الأقل');if(!out.length)return toast('لا مواعيد ناتجة');if(!cap)return toast('اكتب النص');
+ out.forEach(at=>S.posts.push({id:uid(),p:pid(),a:ids,at,cap,hook:'',st:'draft'}));save();S.view='queue';render();toast('تم إنشاء '+out.length+' مسودة. راجعها ووافق')}
 function vPlan(){$('#view').innerHTML=`<div class="card" style="max-width:760px"><h2 style="margin-top:0">حدود هذا العرض</h2><ul style="line-height:2"><li>هذه نسخة تجريبية ببيانات وهمية. تُحفظ في متصفحك فقط.</li><li>لا يوجد نشر فعلي. كل شيء DRY-RUN.</li><li>تيك توك وX: النشر يدوي بمساعدة التطبيق (قيود المنصتين).</li><li>إنستجرام وفيسبوك ويوتيوب: يحتاج ربط OAuth بموافقتك مرة واحدة لكل حساب.</li><li>المشاريع والحسابات والجدولة على أي فترة: متاحة هنا.</li></ul></div>`}
 // composer
 let cmp=null;
@@ -203,18 +226,22 @@ function showComposer(){
 function tg(id){cmp.a=cmp.a.includes(id)?cmp.a.filter(x=>x!==id):[...cmp.a,id];showComposer()}
 function pv(){const el=$('#pv');if(!el)return;const l=cmp.a.map(accOf).filter(Boolean);el.innerHTML=l.length?l.map(a=>`<div class="mock"><div class="row"><span class="net" style="background:${NET[a.net].c};width:28px;height:28px;font-size:10px">${NET[a.net].s}</span><b>${esc(a.h)}</b></div><div class="vid">▶ فيديو</div><b>${esc(cmp.hook)}</b><div>${esc(cmp.cap)||'<span class="note">...</span>'}</div>${NET[a.net].manual?'<div class="note">! النشر يدوي على هذه المنصة</div>':''}</div>`).join(''):'<div class="empty">اختر حسابًا لترى المعاينة</div>'}
 function suggest(){const t=['٣ حاجات محدش قالك عليها عن ...','لو بتعمل ده غلط، وقف دلوقتي','السر اللي خلى النتيجة تتغير في أسبوع','قبل ما تكمل، شوف الفيديو ده'];cmp.hook=t[Math.floor(Math.random()*t.length)];showComposer();toast('قوالب جاهزة. الاقتراح بالذكاء الاصطناعي يأتي مع النسخة الخاصة')}
-function saveP(st){if(!cmp.a.length)return toast('اختر حسابًا');if(!cmp.cap.trim()&&!cmp.hook.trim())return toast('اكتب النص');cmp.st=st;cmp.p=pid();if(cmp.id){S.posts=S.posts.map(x=>x.id===cmp.id?cmp:x)}else{cmp.id=uid();S.posts.push(cmp)}save();closeM();render();toast(st==='approved'?'تمت الموافقة. لن ينشر شيء قبل تفعيل النشر':'تم الحفظ كمسودة')}
+function shareLink(id){const x=S.posts.find(p=>p.id===id);const o={c:x.cap,h:x.hook,at:x.at,n:x.a.map(accOf).filter(Boolean).map(a=>a.net)};const u=location.origin+location.pathname+'#preview='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));navigator.clipboard&&navigator.clipboard.writeText(u);toast('تم نسخ رابط المعاينة (يعرض هذا البوست فقط)')}
+function saveP(st){if(!cmp.a.length)return toast('اختر حسابًا');if(!cmp.cap.trim()&&!cmp.hook.trim())return toast('اكتب النص');cmp.st=st;cmp.p=pid();if(conflicts(cmp).length&&!confirm('يوجد بوست آخر لنفس الحساب في نفس الوقت. متابعة؟'))return;if(cmp.id){S.posts=S.posts.map(x=>x.id===cmp.id?cmp:x)}else{cmp.id=uid();S.posts.push(cmp)}save();closeM();render();toast(st==='approved'?'تمت الموافقة. لن ينشر شيء قبل تفعيل النشر':'تم الحفظ كمسودة')}
 function closeM(){$('#modal').classList.remove('on')}
 $('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
 function setSt(id,st){S.posts.find(x=>x.id===id).st=st;save();render()}
 function delPost(id){S.posts=S.posts.filter(x=>x.id!==id);save();render()}
 function approveAll(){postsOf().forEach(x=>{if(x.st==='draft')x.st='approved'});save();render()}
 const H=location.hash.slice(1);
+if(H.startsWith('preview=')){try{const o=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(H.slice(8))))));document.body.innerHTML='<div style="max-width:560px;margin:40px auto;padding:0 16px"><div class="card"><b>معاينة بوست للموافقة</b><div class="note">'+esc(o.at.replace('T',' · '))+'</div>'+o.n.map(n=>'<div class="mock"><span class="pill s-draft">'+esc((NET[n]||{}).n||n)+'</span><div class="vid">▶ فيديو</div><b>'+esc(o.h)+'</b><div>'+esc(o.c)+'</div></div>').join('')+'<label>تعليقك</label><textarea id="pc"></textarea><div class="row" style="margin-top:10px"><button class="btn ok" onclick="location.href=\'https://wa.me/?text=\'+encodeURIComponent(\'موافق: \'+document.getElementById(\'pc\').value)">موافق (إرسال واتساب)</button><button class="btn bad" onclick="location.href=\'https://wa.me/?text=\'+encodeURIComponent(\'تعديل: \'+document.getElementById(\'pc\').value)">طلب تعديل</button></div><div class="note">هذه الصفحة تعرض هذا البوست فقط، وبدون دخول.</div></div></div>';document.documentElement.dataset.theme='light'}catch(e){}}
+else{
 if(H.includes('dark'))S.theme='dark';
 const mv=H.match(/view=(\w+)/);if(mv)S.view=mv[1];
-if(H.includes('week'))S.mode='week';
+if(H.includes('week'))S.mode='week';if(H.includes('list'))S.mode='list';if(H.includes('day'))S.mode='day';
 render();
 if(H.includes('composer')){S.cur='p1';openComposer();cmp.a=['a1'];cmp.hook='Example hook';cmp.cap='[SAMPLE] Example caption';showComposer()}
+}
 </script>
 </body>
 </html>
