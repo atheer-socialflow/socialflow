@@ -1,31 +1,220 @@
-<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SocialFlow</title><style>
-body{font-family:system-ui,sans-serif;margin:0;background:#f5f6f8;color:#222}header{background:#111;color:#fff;padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-header b{margin-inline-end:auto}button,select{padding:6px 10px;border-radius:6px;border:0;cursor:pointer}
-.tag{background:#e0a800;color:#000;padding:2px 8px;border-radius:10px;font-size:12px}main{padding:12px;max-width:1100px;margin:auto}
-.grid{direction:ltr;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.day{background:#fff;min-height:84px;padding:4px;border-radius:6px;font-size:11px}.day h6{margin:0 0 3px;color:#888}
-.pill{display:block;border-radius:4px;color:#fff;padding:2px 4px;margin-bottom:2px;font-size:11px;cursor:pointer}
-.card{background:#fff;border-radius:8px;padding:10px;margin:8px 0;border-inline-start:6px solid #ccc}.card small{color:#666}
-.st-approved{outline:2px solid #2a9d4a}.st-hold{opacity:.6}.st-scheduled_external{background:#eef6ff}.badge{background:#2f7de1;color:#fff;border-radius:8px;padding:1px 7px;font-size:11px}.ok{background:#2a9d4a;color:#fff}.hd{background:#d9534f;color:#fff}
-</style><body><header><b>SocialFlow</b><span class="tag">DRY-RUN: لا نشر فعلي</span><select id="f"></select><button onclick="exp()">تصدير الحالة</button></header>
-<main><h3 id="m"></h3><div class="grid" id="cal"></div><h3>مولّد الكابشنز والهوكس</h3><div class=card>المشروع <select id=gb></select> العدد <input id=gn type=number value=5 style=width:50px> الموضوع <input id=gt style=width:50%> <button onclick=gen()>جهّز الطلب</button><pre id=go style=white-space:pre-wrap></pre><small>الكتابة بتتم بالذكاء الاصطناعي من فريقنا (بدون مفتاح مدفوع) وبتنزل في الطابور كمسودة.</small></div><h3>الطابور</h3><div id="q"></div></main>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SocialFlow</title>
+<style>
+:root{--bg:#f4f5fb;--panel:#fff;--ink:#14152b;--mute:#6b6f8a;--line:#e6e8f2;--brand:#6c5ce7;--brand2:#a29bfe;--ok:#12b886;--warn:#f59f00;--bad:#f03e3e;--shadow:0 6px 24px rgba(30,30,80,.07);--r:16px}
+[data-theme=dark]{--bg:#0e0f1c;--panel:#171829;--ink:#eceefb;--mute:#9a9db8;--line:#26283f;--shadow:0 6px 24px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,"Noto Sans Arabic",system-ui,sans-serif;font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--panel);border-inline-start:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;padding:4px 8px 14px}
+.logo i{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#00b8d9);display:grid;place-items:center;color:#fff;font-style:normal}
+.lbl{font-size:11px;color:var(--mute);padding:10px 10px 4px;letter-spacing:.3px}
+.proj{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:12px;cursor:pointer;border:0;background:none;width:100%;text-align:start}
+.proj:hover,.nav button:hover{background:var(--bg)}
+.proj.on{background:color-mix(in srgb,var(--brand) 12%,transparent);font-weight:700}
+.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;gap:10px;align-items:center;padding:10px;border:0;background:none;border-radius:12px;cursor:pointer;text-align:start}
+.nav button.on{background:var(--brand);color:#fff;font-weight:700}
+.sp{flex:1}
+main{padding:22px 28px;max-width:1280px;width:100%}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.top h1{font-size:24px;margin:0;flex:1}
+.badge{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:700;background:color-mix(in srgb,var(--warn) 18%,transparent);color:#b36b00}
+[data-theme=dark] .badge{color:#ffc857}
+.btn{border:1px solid var(--line);background:var(--panel);padding:9px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--brand)}
+.btn.pri{background:linear-gradient(135deg,var(--brand),#7f6cf0);color:#fff;border:0;box-shadow:0 6px 16px rgba(108,92,231,.35)}
+.btn.ok{background:var(--ok);color:#fff;border:0}.btn.bad{background:none;color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:9px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat b{font-size:26px;display:block}.stat span{color:var(--mute);font-size:12px}
+.cal-h{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cal-h h2{margin:0;flex:1;font-size:18px}
+.seg{display:inline-flex;background:var(--bg);border-radius:11px;padding:3px}
+.seg button{border:0;background:none;padding:6px 13px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--panel);box-shadow:var(--shadow);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow{font-size:11px;color:var(--mute);text-align:center;padding:4px}
+.day{min-height:104px;background:var(--bg);border-radius:12px;padding:6px;cursor:pointer;border:1px solid transparent;overflow:hidden}
+.day:hover{border-color:var(--brand2)}
+.day.today{border-color:var(--brand)}.day.out{opacity:.4}
+.day small{color:var(--mute);font-size:11px}
+.chip{display:flex;gap:5px;align-items:center;font-size:11px;padding:3px 6px;border-radius:7px;margin-top:3px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.draft{opacity:.55}.chip.hold{background:#868e96!important}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.wk .day{min-height:340px}
+.post{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--panel)}
+.net{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px}
+.pill{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:700;display:inline-block}
+.s-draft{background:#eef;color:#5b5bd6}.s-approved{background:#dff7ec;color:#0b8a5f}.s-hold{background:#eee;color:#666}.s-published{background:#e0f0ff;color:#1c6fd1}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.acc{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px}
+.modal{position:fixed;inset:0;background:rgba(10,10,30,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:9;backdrop-filter:blur(3px)}
+.modal.on{display:flex}
+.sheet{background:var(--panel);border-radius:22px;width:min(980px,100%);max-height:94vh;overflow:auto;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
+label{display:block;font-size:12px;color:var(--mute);margin:12px 0 5px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:10px}
+textarea{min-height:110px;resize:vertical}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chs{padding:7px 12px;border-radius:99px;border:1px solid var(--line);cursor:pointer;background:var(--bg);display:flex;gap:6px;align-items:center}
+.chs.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,transparent);font-weight:700}
+.prev{background:var(--bg);border-radius:16px;padding:14px;border:1px dashed var(--line)}
+.mock{background:var(--panel);border-radius:14px;padding:12px;border:1px solid var(--line);margin-bottom:10px}
+.vid{height:150px;border-radius:10px;background:linear-gradient(135deg,#2b2d55,#6c5ce7);display:grid;place-items:center;color:#fff;margin:8px 0}
+.empty{text-align:center;color:var(--mute);padding:40px}
+.note{font-size:12px;color:var(--mute);margin-top:8px}
+.toast{position:fixed;bottom:22px;inset-inline-start:22px;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:20}
+.toast.on{opacity:1}
+@media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto}.cols{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="logo"><i>S</i>SocialFlow</div>
+  <div class="lbl">المشاريع</div>
+  <div id="projs"></div>
+  <button class="proj" onclick="newProject()"><span class="dot" style="background:var(--line)"></span>+ مشروع جديد</button>
+  <div class="lbl">القائمة</div>
+  <div class="nav" id="nav"></div>
+  <div class="sp"></div>
+  <button class="btn" onclick="toggleTheme()">◐ الوضع الداكن</button>
+</aside>
+<main>
+  <div class="top"><h1 id="title"></h1><span class="badge">DRY-RUN · لا نشر فعلي</span><button class="btn pri" onclick="openComposer()">+ بوست جديد</button></div>
+  <div id="view"></div>
+</main>
+</div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
 <script>
-const key='sf-status';let D,S=JSON.parse(localStorage.getItem(key)||'{}');
-const NW={instagram:'إنستجرام',tiktok:'تيك توك',youtube:'يوتيوب',facebook:'فيسبوك',x:'X (يدوي)'};
-fetch('queue.json').then(r=>r.json()).then(d=>{D=d;window.P=Object.fromEntries(d.posts.map(p=>[p.id,p]));gb.innerHTML=d.brands.map(b=>`<option value=${b.id}>${b.name}</option>`).join('');f.innerHTML='<option value="">كل المشاريع</option>'+d.brands.map(b=>`<option value=${b.id}>${b.name}</option>`).join('');f.onchange=draw;draw()});
-const bc=id=>D.brands.find(b=>b.id==id);const st=p=>S[p.id]||p.status;
-function set(id,v){S[id]=v;localStorage.setItem(key,JSON.stringify(S));draw()}
-function say(p,v){const t=(v=='approved'?'اعتمد':'أوقف')+' '+p.id+' ('+bc(p.brand).name+' '+NW[p.network]+' '+p.at.replace('T',' ')+')';navigator.clipboard&&navigator.clipboard.writeText(t);set(p.id,v);alert('اتحفظ هنا. ابعت لنا الرسالة دي ليتسجل في المنصة:\n'+t)}
-function gen(){const b=bc(gb.value);const t='اكتب '+gn.value+' كابشن وهوك لمشروع '+b.name+' عن: '+gt.value+'\nأسلوب البراند: '+b.voice;navigator.clipboard&&navigator.clipboard.writeText(t);go.textContent=t}
-function exp(){prompt('انسخ وابعته لنا',JSON.stringify(S))}
-let cur=null;function nav(k){cur=new Date(cur.getFullYear(),cur.getMonth()+k,1);draw()}
-function draw(){const ps=D.posts.filter(p=>!f.value||p.brand==f.value).sort((a,b)=>a.at.localeCompare(b.at));
-if(!cur){const t=ps[0]?new Date(ps[0].at):new Date();cur=new Date(t.getFullYear(),t.getMonth(),1)}
-const s=cur,y=s.getFullYear(),mo=String(s.getMonth()+1).padStart(2,'0');
-m.innerHTML=`<button onclick="nav(-1)">›</button> ${s.toLocaleDateString('ar-EG',{month:'long',year:'numeric'})} <button onclick="nav(1)">‹</button>`;
-const n=new Date(y,s.getMonth()+1,0).getDate();let h='';for(let i=0;i<s.getDay();i++)h+='<div></div>';
-for(let d=1;d<=n;d++){const ds=`${y}-${mo}-${String(d).padStart(2,'0')}`;
-h+=`<div class=day><h6>${d}</h6>${ps.filter(p=>p.at.startsWith(ds)).map(p=>`<a class=pill style="background:${bc(p.brand).color}" href="#${p.id}">${p.at.slice(11)} ${NW[p.network].split(' ')[0]}</a>`).join('')}</div>`}
-cal.innerHTML=h;
-q.innerHTML=ps.map(p=>`<div class="card st-${st(p)}" id=${p.id} style="border-color:${bc(p.brand).color}"><b>${bc(p.brand).name}</b> · ${NW[p.network]} · ${p.at.replace('T',' ')} · <small>${st(p)}</small>${st(p)=='scheduled_external'?' <span class=badge>مجدول خارجياً</span>':''}${p.sample?' <span class=badge style=background:#999>نموذج</span>':''}<p>${p.hook?'<b>'+p.hook+'</b><br>':''}${p.caption}</p><small>${p.video}${p.note?' · '+p.note:''}</small><br><button class=ok onclick="say(P['${p.id}'],'approved')">موافقة</button> <button class=hd onclick="say(P['${p.id}'],'hold')">إيقاف</button></div>`).join('')}
-</script></body></html>
+const NET={instagram:{n:'إنستجرام',c:'#e1306c',s:'IG',manual:false},facebook:{n:'فيسبوك',c:'#1877f2',s:'FB',manual:false},youtube:{n:'يوتيوب',c:'#ff0000',s:'YT',manual:false},tiktok:{n:'تيك توك',c:'#4a4a5e',s:'TT',manual:true},x:{n:'X',c:'#5c5c70',s:'X',manual:true}};
+const ST={draft:'مسودة',approved:'موافق عليه',hold:'موقوف',published:'منشور'};
+const KEY='socialflow.demo.v2';
+let S=JSON.parse(localStorage.getItem(KEY)||'null');
+function seed(){const d=new Date();const iso=(o,h)=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+o,h,0);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')+'T'+String(h).padStart(2,'0')+':00'};
+return{theme:'light',cur:'p1',view:'cal',mode:'month',off:0,
+projects:[{id:'p1',name:'Demo Brand A',color:'#6c5ce7'},{id:'p2',name:'Demo Brand B',color:'#00b8d9'}],
+accounts:[{id:'a1',p:'p1',net:'instagram',h:'@demo_a',st:'sample'},{id:'a2',p:'p1',net:'tiktok',h:'@demo_a',st:'sample'},{id:'a3',p:'p2',net:'facebook',h:'Demo B Page',st:'sample'},{id:'a4',p:'p2',net:'youtube',h:'Demo B Channel',st:'sample'}],
+posts:[
+{id:'x1',p:'p1',a:['a1'],at:iso(1,18),cap:'[SAMPLE] Example caption one',hook:'Example hook',st:'approved'},
+{id:'x2',p:'p1',a:['a2'],at:iso(2,19),cap:'[SAMPLE] Example caption two',hook:'Example hook',st:'draft'},
+{id:'x3',p:'p2',a:['a3','a4'],at:iso(3,20),cap:'[SAMPLE] Example caption three',hook:'Example hook',st:'draft'},
+{id:'x4',p:'p1',a:['a1'],at:iso(5,18),cap:'[SAMPLE] Example caption four',hook:'Example hook',st:'hold'},
+{id:'x5',p:'p2',a:['a3'],at:iso(6,12),cap:'[SAMPLE] Example caption five',hook:'Example hook',st:'approved'}]}}
+if(!S)S=seed();
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const $=s=>document.querySelector(s);
+const pid=()=>S.cur;
+const P=()=>S.projects.find(p=>p.id===S.cur);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2600)}
+function toggleTheme(){S.theme=S.theme==='dark'?'light':'dark';save();render()}
+function nav(v){S.view=v;save();render()}
+function newProject(){const n=prompt('اسم المشروع الجديد');if(!n)return;const cols=['#6c5ce7','#00b8d9','#f76707','#12b886','#e64980','#fab005'];const id=uid();S.projects.push({id,name:n.trim(),color:cols[S.projects.length%cols.length]});S.cur=id;S.view='acc';save();render();toast('تم إنشاء المشروع. اربط حساباته من هنا')}
+function setProj(id){S.cur=id;save();render()}
+const postsOf=()=>S.posts.filter(x=>x.p===pid());
+const accOf=id=>S.accounts.find(a=>a.id===id);
+function render(){
+ document.documentElement.dataset.theme=S.theme;
+ $('#projs').innerHTML=S.projects.map(p=>`<button class="proj ${p.id===S.cur?'on':''}" onclick="setProj('${p.id}')"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('');
+ const items=[['cal','▦','التقويم'],['queue','☰','الطابور والموافقات'],['acc','◎','الحسابات'],['range','↻','جدولة على فترة'],['plan','i','حدود العرض']];
+ $('#nav').innerHTML=items.map(([k,i,t])=>`<button class="${S.view===k?'on':''}" onclick="nav('${k}')">${i} ${t}</button>`).join('');
+ $('#title').textContent=P().name;
+ ({cal:vCal,queue:vQueue,acc:vAcc,range:vRange,plan:vPlan})[S.view]();
+}
+function stats(){const p=postsOf();const c=s=>p.filter(x=>x.st===s).length;return `<div class="stats"><div class="card stat"><b>${p.length}</b><span>كل البوستات</span></div><div class="card stat"><b>${c('draft')}</b><span>مسودات تنتظر موافقتك</span></div><div class="card stat"><b>${c('approved')}</b><span>موافق عليها</span></div><div class="card stat"><b>${S.accounts.filter(a=>a.p===pid()).length}</b><span>حسابات</span></div></div>`}
+function chip(x){const a=accOf(x.a[0]);const n=NET[a?.net]||{c:'#888',s:'?'};const t=x.at.slice(11,16);return `<div class="chip ${x.st}" style="background:${n.c}" onclick="event.stopPropagation();openPost('${x.id}')">${t} ${n.s}${x.a.length>1?' +'+(x.a.length-1):''}</div>`}
+function vCal(){
+ const base=new Date();let html=stats();
+ const mode=S.mode;let label='',cells='';
+ const names=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+ const byDay={};postsOf().forEach(x=>(byDay[x.at.slice(0,10)]||(byDay[x.at.slice(0,10)]=[])).push(x));
+ const today=dkey(new Date());
+ if(mode==='month'){
+  const m=new Date(base.getFullYear(),base.getMonth()+S.off,1);label=m.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
+  const start=new Date(m);start.setDate(1-m.getDay());
+  cells=names.map(n=>`<div class="dow">${n}</div>`).join('');
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=dkey(d);cells+=`<div class="day ${d.getMonth()!==m.getMonth()?'out':''} ${k===today?'today':''}" onclick="openComposer('${k}')"><small>${d.getDate()}</small>${(byDay[k]||[]).map(chip).join('')}</div>`}
+  html+=`<div class="card"><div class="cal-h"><button class="btn sm" onclick="S.off--;save();render()">›</button><h2>${label}</h2><button class="btn sm" onclick="S.off++;save();render()">‹</button><div class="seg"><button class="on">شهر</button><button onclick="S.mode='week';S.off=0;save();render()">أسبوع</button></div></div><div class="grid">${cells}</div></div>`;
+ }else{
+  const st=new Date(base);st.setDate(base.getDate()-base.getDay()+7*S.off);
+  label='أسبوع '+st.toLocaleDateString('ar-EG',{day:'numeric',month:'long'});
+  for(let i=0;i<7;i++){const d=new Date(st);d.setDate(st.getDate()+i);const k=dkey(d);cells+=`<div class="day ${k===today?'today':''}" onclick="openComposer('${k}')"><b>${names[d.getDay()]} ${d.getDate()}</b><br>${(byDay[k]||[]).sort((a,b)=>a.at<b.at?-1:1).map(chip).join('')}</div>`}
+  html+=`<div class="card"><div class="cal-h"><button class="btn sm" onclick="S.off--;save();render()">›</button><h2>${label}</h2><button class="btn sm" onclick="S.off++;save();render()">‹</button><div class="seg"><button onclick="S.mode='month';S.off=0;save();render()">شهر</button><button class="on">أسبوع</button></div></div><div class="wk">${cells}</div></div>`;
+ }
+ $('#view').innerHTML=html;
+}
+function postRow(x){const a=x.a.map(accOf).filter(Boolean);const n=NET[a[0]?.net]||{c:'#888',s:'?'};
+ return `<div class="post"><div class="net" style="background:${n.c}">${n.s}</div><div><div class="row"><b>${esc(x.hook||'(بدون هوك)')}</b><span class="pill s-${x.st}">${ST[x.st]}</span>${a.some(q=>NET[q.net].manual)?'<span class="pill" style="background:#fff3bf;color:#8a6d00">نشر يدوي</span>':''}</div><div style="color:var(--mute);margin-top:4px">${esc(x.cap)}</div><div class="note">${x.at.replace('T',' · ')} — ${a.map(q=>NET[q.net].n+' '+esc(q.h)).join('، ')}</div></div><div class="row"><button class="btn sm ok" onclick="setSt('${x.id}','approved')">موافقة</button><button class="btn sm" onclick="setSt('${x.id}','hold')">إيقاف</button><button class="btn sm bad" onclick="delPost('${x.id}')">حذف</button></div></div>`}
+let qf='all';
+function vQueue(){
+ const l=postsOf().filter(x=>qf==='all'||x.st===qf).sort((a,b)=>a.at<b.at?-1:1);
+ $('#view').innerHTML=stats()+`<div class="card"><div class="cal-h"><h2>الطابور</h2><div class="seg">${['all','draft','approved','hold'].map(k=>`<button class="${qf===k?'on':''}" onclick="qf='${k}';render()">${k==='all'?'الكل':ST[k]}</button>`).join('')}</div><button class="btn sm ok" onclick="approveAll()">وافق على كل المسودات</button></div>${l.length?l.map(postRow).join(''):'<div class="empty">لا يوجد بوستات هنا. ابدأ بـ "+ بوست جديد".</div>'}<div class="note">الموافقة تحفظ الحالة فقط. لا يتم نشر أي شيء قبل ربط الحساب وتفعيل النشر بموافقتك.</div></div>`}
+function vAcc(){
+ const l=S.accounts.filter(a=>a.p===pid());
+ $('#view').innerHTML=`<div class="card"><div class="cal-h"><h2>حسابات ${esc(P().name)}</h2></div>${l.map(a=>`<div class="acc"><div class="net" style="background:${NET[a.net].c}">${NET[a.net].s}</div><div style="flex:1"><b>${NET[a.net].n}</b> ${esc(a.h)}<div class="note">${a.st==='sample'?'حساب تجريبي، غير متصل':a.st==='pending'?'بانتظار ربط OAuth (يحتاج موافقتك من موبايلك)':''} ${NET[a.net].manual?'· النشر يدوي بمساعدة التطبيق':'· نشر تلقائي بعد الربط والموافقة'}</div></div><button class="btn sm bad" onclick="delAcc('${a.id}')">إزالة</button></div>`).join('')||'<div class="empty">لا توجد حسابات بعد.</div>'}
+ <h3 style="margin-top:20px">اربط حساب جديد</h3><div class="chips">${Object.entries(NET).map(([k,v])=>`<button class="chs" onclick="addAcc('${k}')"><span class="net" style="background:${v.c};width:26px;height:26px;border-radius:8px;font-size:10px">${v.s}</span>${v.n}${v.manual?' (يدوي)':''}</button>`).join('')}</div>
+ <div class="note">عدد غير محدود من الحسابات لكل منصة. في هذا العرض التجريبي الزر يسجّل حسابًا "بانتظار الربط" فقط ولا يتصل بأي منصة. الربط الفعلي عبر OAuth الرسمي سيُضاف مع النسخة الخاصة.</div></div>`}
+function addAcc(net){const h=prompt('اسم الحساب أو @handle');if(!h)return;S.accounts.push({id:uid(),p:pid(),net,h,st:'pending'});save();render();toast('أُضيف الحساب بحالة: بانتظار الربط')}
+function delAcc(id){S.accounts=S.accounts.filter(a=>a.id!==id);save();render()}
+function vRange(){
+ const accs=S.accounts.filter(a=>a.p===pid());const t=dkey(new Date());
+ $('#view').innerHTML=`<div class="card" style="max-width:720px"><h2 style="margin-top:0">جدولة سلسلة بوستات على فترة</h2><div class="note">اختر المدة بحرية: أسبوع، 10 أيام، شهر، أو أي رقم. تُنشأ كمسودات لازم توافق عليها.</div>
+ <label>الحسابات</label><div class="chips" id="rAcc">${accs.map(a=>`<div class="chs" data-id="${a.id}" onclick="this.classList.toggle('on')">${NET[a.net].n} ${esc(a.h)}</div>`).join('')||'<span class="note">أضف حسابًا أولًا</span>'}</div>
+ <div class="cols"><div><label>تاريخ البداية</label><input type="date" id="rStart" value="${t}"></div><div><label>عدد الأيام</label><input type="number" id="rDays" min="1" max="365" value="10"></div></div>
+ <div class="cols"><div><label>كل كم يوم بوست</label><input type="number" id="rEvery" min="1" value="1"></div><div><label>الوقت</label><input type="time" id="rTime" value="19:00"></div></div>
+ <label>النص الأساسي (يمكنك تعديل كل بوست لاحقًا)</label><textarea id="rCap" placeholder="اكتب الكابشن..."></textarea>
+ <div class="row" style="margin-top:14px"><button class="btn pri" onclick="makeRange()">أنشئ السلسلة</button><button class="btn" onclick="preset(7)">أسبوع</button><button class="btn" onclick="preset(10)">10 أيام</button><button class="btn" onclick="preset(30)">شهر</button></div></div>`}
+function preset(n){$('#rDays').value=n}
+function makeRange(){
+ const ids=[...document.querySelectorAll('#rAcc .on')].map(e=>e.dataset.id);if(!ids.length)return toast('اختر حسابًا واحدًا على الأقل');
+ const s=$('#rStart').value,n=+$('#rDays').value,e=+$('#rEvery').value||1,t=$('#rTime').value||'19:00',cap=$('#rCap').value.trim();if(!s||!n||!cap)return toast('أكمل التاريخ والمدة والنص');
+ let c=0;const d0=new Date(s+'T00:00:00');for(let i=0;i<n;i+=e){const d=new Date(d0);d.setDate(d0.getDate()+i);S.posts.push({id:uid(),p:pid(),a:ids,at:dkey(d)+'T'+t,cap,hook:'',st:'draft'});c++}
+ save();S.view='queue';render();toast('تم إنشاء '+c+' مسودة. راجعها ووافق')}
+function vPlan(){$('#view').innerHTML=`<div class="card" style="max-width:760px"><h2 style="margin-top:0">حدود هذا العرض</h2><ul style="line-height:2"><li>هذه نسخة تجريبية ببيانات وهمية. تُحفظ في متصفحك فقط.</li><li>لا يوجد نشر فعلي. كل شيء DRY-RUN.</li><li>تيك توك وX: النشر يدوي بمساعدة التطبيق (قيود المنصتين).</li><li>إنستجرام وفيسبوك ويوتيوب: يحتاج ربط OAuth بموافقتك مرة واحدة لكل حساب.</li><li>المشاريع والحسابات والجدولة على أي فترة: متاحة هنا.</li></ul></div>`}
+// composer
+let cmp=null;
+function openComposer(day){cmp={id:null,a:[],at:(day||dkey(new Date()))+'T19:00',cap:'',hook:'',st:'draft'};showComposer()}
+function openPost(id){cmp=JSON.parse(JSON.stringify(S.posts.find(x=>x.id===id)));showComposer()}
+function showComposer(){
+ const accs=S.accounts.filter(a=>a.p===pid());
+ $('#sheet').innerHTML=`<div class="cal-h"><h2>${cmp.id?'تعديل بوست':'بوست جديد'}</h2><button class="btn sm" onclick="closeM()">✕</button></div><div class="cols"><div>
+ <label>الحسابات</label><div class="chips">${accs.map(a=>`<div class="chs ${cmp.a.includes(a.id)?'on':''}" onclick="tg('${a.id}')">${NET[a.net].n} ${esc(a.h)}</div>`).join('')||'<span class="note">لا حسابات. أضف من صفحة الحسابات.</span>'}</div>
+ <label>الهوك (أول سطر)</label><input id="cH" value="${esc(cmp.hook)}" oninput="cmp.hook=this.value;pv()">
+ <label>الكابشن</label><textarea id="cC" oninput="cmp.cap=this.value;pv()">${esc(cmp.cap)}</textarea>
+ <div class="row"><button class="btn sm" onclick="suggest()">اقتراح هوكات (قوالب)</button></div>
+ <label>الموعد</label><input type="datetime-local" id="cA" value="${cmp.at}" onchange="cmp.at=this.value">
+ <div class="row" style="margin-top:16px"><button class="btn pri" onclick="saveP('draft')">حفظ كمسودة</button><button class="btn ok" onclick="saveP('approved')">موافقة وجدولة</button>${cmp.id?'<button class="btn bad" onclick="delPost(cmp.id);closeM()">حذف</button>':''}</div></div>
+ <div class="prev"><b>معاينة</b><div id="pv"></div></div></div>`;
+ $('#modal').classList.add('on');pv()}
+function tg(id){cmp.a=cmp.a.includes(id)?cmp.a.filter(x=>x!==id):[...cmp.a,id];showComposer()}
+function pv(){const el=$('#pv');if(!el)return;const l=cmp.a.map(accOf).filter(Boolean);el.innerHTML=l.length?l.map(a=>`<div class="mock"><div class="row"><span class="net" style="background:${NET[a.net].c};width:28px;height:28px;font-size:10px">${NET[a.net].s}</span><b>${esc(a.h)}</b></div><div class="vid">▶ فيديو</div><b>${esc(cmp.hook)}</b><div>${esc(cmp.cap)||'<span class="note">...</span>'}</div>${NET[a.net].manual?'<div class="note">! النشر يدوي على هذه المنصة</div>':''}</div>`).join(''):'<div class="empty">اختر حسابًا لترى المعاينة</div>'}
+function suggest(){const t=['٣ حاجات محدش قالك عليها عن ...','لو بتعمل ده غلط، وقف دلوقتي','السر اللي خلى النتيجة تتغير في أسبوع','قبل ما تكمل، شوف الفيديو ده'];cmp.hook=t[Math.floor(Math.random()*t.length)];showComposer();toast('قوالب جاهزة. الاقتراح بالذكاء الاصطناعي يأتي مع النسخة الخاصة')}
+function saveP(st){if(!cmp.a.length)return toast('اختر حسابًا');if(!cmp.cap.trim()&&!cmp.hook.trim())return toast('اكتب النص');cmp.st=st;cmp.p=pid();if(cmp.id){S.posts=S.posts.map(x=>x.id===cmp.id?cmp:x)}else{cmp.id=uid();S.posts.push(cmp)}save();closeM();render();toast(st==='approved'?'تمت الموافقة. لن ينشر شيء قبل تفعيل النشر':'تم الحفظ كمسودة')}
+function closeM(){$('#modal').classList.remove('on')}
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+function setSt(id,st){S.posts.find(x=>x.id===id).st=st;save();render()}
+function delPost(id){S.posts=S.posts.filter(x=>x.id!==id);save();render()}
+function approveAll(){postsOf().forEach(x=>{if(x.st==='draft')x.st='approved'});save();render()}
+const H=location.hash.slice(1);
+if(H.includes('dark'))S.theme='dark';
+const mv=H.match(/view=(\w+)/);if(mv)S.view=mv[1];
+if(H.includes('week'))S.mode='week';
+render();
+if(H.includes('composer')){S.cur='p1';openComposer();cmp.a=['a1'];cmp.hook='Example hook';cmp.cap='[SAMPLE] Example caption';showComposer()}
+</script>
+</body>
+</html>
