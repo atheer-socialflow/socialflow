@@ -75,7 +75,7 @@ textarea{min-height:110px;resize:vertical}
 .toast{position:fixed;bottom:22px;inset-inline-start:22px;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:20}
 .toast.on{opacity:1}
 @media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto}.cols{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
-.frame{border-radius:14px;overflow:hidden;background:#000;position:relative;margin:6px auto;border:1px solid var(--line)}.play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:34px;text-shadow:0 2px 8px #000}.up{border:1px dashed var(--line);border-radius:12px;padding:10px}.addhint{opacity:0;color:var(--mute);font-size:12px;margin-top:4px}.day:hover .addhint{opacity:1}.gd{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.gi{display:flex;gap:8px;align-items:flex-start;padding:3px 0;color:var(--bad)}.gi.ok{color:var(--ok)}.gi>div{color:var(--ink)}.tg{color:var(--mute);font-size:11px}.gd a{color:var(--brand)}</style>
+.frame{border-radius:14px;overflow:hidden;background:#000;position:relative;margin:6px auto;border:1px solid var(--line)}.play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:34px;text-shadow:0 2px 8px #000}.up{border:1px dashed var(--line);border-radius:12px;padding:10px}.addhint{opacity:0;color:var(--mute);font-size:12px;margin-top:4px}.day:hover .addhint{opacity:1}.gd{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}.gi{display:flex;gap:8px;align-items:flex-start;padding:3px 0;color:var(--bad)}.gi.ok{color:var(--ok)}.gi>div{color:var(--ink)}.tg{color:var(--mute);font-size:11px;display:block}.sg{margin-top:8px;padding:8px;border-radius:10px;background:var(--bg)}.sg .chs{cursor:pointer}.gd a{color:var(--brand)}</style>
 </head>
 <body>
 <div class="app">
@@ -236,7 +236,7 @@ function pvOne(a){const n=NET[a.net];const c=fmtOf(a);const F=FM[a.net].find(x=>
  <div class="frame" style="width:${w}px;height:${h}px">${inner}</div>
  <div class="note">${F[3]}×${F[4]} px (قياس شائع موصى به، راجعه قبل النشر)${warn?' · '+warn:''}</div>
  ${m?`<div class="seg" style="margin:6px 0"><button class="${c.fit==='cover'?'on':''}" onclick="setFit('${a.id}','cover')">ملء (قص)</button><button class="${c.fit==='contain'?'on':''}" onclick="setFit('${a.id}','contain')">احتواء</button></div>`:''}
- <b>${esc(cmp.hook)}</b><div>${esc(cmp.cap)||'<span class="note">...</span>'}</div>${guideBox(a,F)}${n.manual?'<div class="note">! النشر يدوي على هذه المنصة</div>':''}</div>`}
+ <b>${esc(cmp.hook)}</b><div>${esc(cmp.cap)||'<span class="note">...</span>'}</div>${suggBox(a,F)}${guideBox(a,F)}${n.manual?'<div class="note">! النشر يدوي على هذه المنصة</div>':''}</div>`}
 
 // ---- virality guidance (guidance only, not guarantees) ----
 const SRC={instagram:[['Mosseri: watch time, likes, sends (Social Media Today)','https://more.you/blog/instagram-ranking-signals/'],['Buffer: Instagram algorithm','https://buffer.com/resources/instagram-algorithms/']],
@@ -262,7 +262,7 @@ function guide(a,F){const m=cmp.media,cap=cmp.cap||'',hk=cmp.hook||'',net=a.net,
  if(net==='x'){add('len','النص 280 حرف أو أقل',(hk+' '+cap).trim().length<=280,'اختصر النص','H');add('hash','هاشتاجات 2 أو أقل',nHash(cap)<=2,'X لا يكافئ كثرة الهاشتاجات؛ قللها','H');add('share','فيه سبب يخلي الناس يشاركوا/ينسخوا الرابط',null,'مشاركة الرابط لها أعلى وزن في ترتيب X المنشور (Aug 2026)','S')}
  add('f3','أول 3 ثواني فيها الهوك البصري',null,'ابدأ بالنتيجة أو سؤال أو حركة، لا بمقدمة أو شعار','S');
  add('thumb','الغلاف/اللقطة الأولى واضحة وفيها نص قصير',null,'اختر غلافًا واضحًا؛ يؤثر على نقرات الدخول للبروفايل والبحث','H');
- add('time','وقت النشر مختار حسب نشاط جمهورك',null,'لا يوجد وقت عالمي أفضل؛ راجع إحصائيات حسابك (Insights) واختر وقت نشاط متابعيك','H');
+ const bh=((S.best||{})[net]||'').split(',').map(x=>+x.trim()).filter(x=>x>=0&&x<24&&x===x);const hr=+(cmp.at||'T19').slice(11,13);add('time','وقت النشر ضمن ساعات نشاط جمهورك',bh.length?bh.includes(hr):null,'لا يوجد وقت عالمي أفضل؛ راجع إحصائيات حسابك (Insights) واختر وقت نشاط متابعيك','H');
  return it}
 function tickChk(id,k){cmp.chk=cmp.chk||{};const key=id+':'+k;cmp.chk[key]=!cmp.chk[key];pv()}
 function guideBox(a,F){const it=guide(a,F);cmp.chk=cmp.chk||{};const val=x=>x.ok===null?!!cmp.chk[a.id+':'+x.k]:x.ok;
@@ -270,6 +270,19 @@ function guideBox(a,F){const it=guide(a,F);cmp.chk=cmp.chk||{};const val=x=>x.ok
  return `<div class="gd"><div class="row"><b>إرشادات الانتشار</b><span class="pill ${sc>=75?'s-approved':sc>=45?'s-draft':'s-hold'}">${done}/${it.length} · ${sc}%</span></div>
  ${it.map(x=>{const v=val(x);return `<div class="gi ${v?'ok':''}">${x.ok===null?`<input type="checkbox" ${v?'checked':''} onchange="tickChk('${a.id}','${x.k}')">`:`<span>${v?'✓':'✗'}</span>`}<div>${x.t}${v?'':`<div class="note">${x.fix}</div>`}<small class="tg">${x.tag==='S'?'مبني على مصدر':'قاعدة عملية'}</small></div></div>`}).join('')}
  <div class="note">إرشادات وليست ضمانات. النقاط مبنية على إشارات الترتيب المعلنة، و"قاعدة عملية" معناها اجتهاد شائع غير صادر من المنصة. المصادر: ${(SRC[a.net]||[]).map(x=>`<a href="${x[1]}" target="_blank" rel="noopener noreferrer">${x[0]}</a>`).join(' · ')}</div></div>`}
+
+// ---- rule-based suggestions (free, no AI API) ----
+const STOP=new Set('في من على الى إلى عن مع هذا هذه ده دي دا ال لو ان أن إن كل اللي اللى ما لا يا و او أو ثم بعد قبل the a an of to in on for and or is are with your you this that it'.split(' '));
+const NICHE={تسويق:['تسويق_رقمي','سوشيال_ميديا','ريادة_أعمال'],اكل:['اكلات','وصفات','مطبخ'],أكل:['اكلات','وصفات','مطبخ'],موضة:['موضة','ستايل','لوك'],جمال:['جمال','عناية','مكياج'],لياقة:['لياقة','تمارين','صحة'],سفر:['سفر','رحلات','سياحة'],عقارات:['عقارات','استثمار','شقق'],تعليم:['تعليم','نصايح','تعلم']};
+function kws(){const t=((cmp.hook||'')+' '+(cmp.cap||'')).replace(/#[\p{L}\p{N}_]+/gu,' ').toLowerCase();const c={};t.split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>2&&!STOP.has(w)&&!/^\d+$/.test(w)).forEach(w=>c[w]=(c[w]||0)+1);return Object.entries(c).sort((a,b)=>b[1]-a[1]||b[0].length-a[0].length).slice(0,6).map(x=>x[0])}
+function suggBox(a,F){const k=kws();if(!k.length)return '<div class="sg note">اكتب الهوك والكابشن لتظهر اقتراحات كلمات مفتاحية وهاشتاجات مطابقة لموضوعك.</div>';
+ const extra=[];k.forEach(w=>Object.keys(NICHE).forEach(n=>{if(w.includes(n)||n.includes(w))NICHE[n].forEach(h=>extra.push(h))}));
+ const max=a.net==='x'?2:a.net==='instagram'?5:a.net==='youtube'?3:4;const tags=[...new Set([...k.slice(0,3).map(w=>w.replace(/\s+/g,'_')),...extra])].slice(0,max);
+ const ttl=[`${k[0]}: اللي محدش بيقولهولك`,`قبل ما تعمل ${k[0]}، شوف ده`,`${k[0]} في 30 ثانية`];
+ return `<div class="sg"><b>اقتراحات حسب موضوع البوست</b><div class="note">كلمات مفتاحية: ${k.map(esc).join('، ')}</div><div class="chips" style="margin:6px 0">${tags.map(h=>`<div class="chs" onclick="addTag('${esc(h)}')">#${esc(h)}</div>`).join('')}</div><div class="note">أفكار هوك/عنوان (قوالب):</div>${ttl.map(t=>`<div class="chs" style="margin:3px 0" onclick="cmp.hook='${esc(t).replace(/'/g,'')}';showComposer()">${esc(t)}</div>`).join('')}
+ <div class="note">ساعات نشاط جمهورك على ${NET[a.net].n} (من Insights، افصل بفاصلة، مثال 18,20): <input style="width:110px" value="${esc((S.best||{})[a.net]||'')}" onchange="S.best=S.best||{};S.best['${a.net}']=this.value;save();pv()"></div>
+ <div class="note">اقتراحات بقواعد بسيطة بدون ذكاء اصطناعي؛ لا تعتمد على بيانات بحث أو منافسة حقيقية.</div></div>`}
+function addTag(h){if(!(cmp.cap||'').includes('#'+h))cmp.cap=((cmp.cap||'')+' #'+h).trim();showComposer()}
 // ---- per-account page ----
 function openAcct(id){S.acct=id;S.view='account';S.aoff=0;save();render()}
 function vAccount(){
