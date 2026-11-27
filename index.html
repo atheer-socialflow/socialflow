@@ -139,7 +139,7 @@ function stats(){const p=postsOf();const c=s=>p.filter(x=>x.st===s).length;retur
 function modeSeg(){return `<div class="seg">${[['month','شهر'],['week','أسبوع'],['day','يوم'],['list','قائمة']].map(([k,t])=>`<button class="${S.mode===k?'on':''}" onclick="S.mode='${k}';S.off=0;save();render()">${t}</button>`).join('')}</div>`}
 function chip(x){const a=accOf(x.a[0]);const n=NET[a?.net]||{c:'#888',s:'?'};const t=x.at.slice(11,16);return `<div class="chip ${x.st}" draggable="true" ondragstart="dragId='${x.id}'" style="background:${n.c}" onclick="event.stopPropagation();openPost('${x.id}')">${t} ${n.s}${x.a.length>1?' +'+(x.a.length-1):''}</div>`}
 let dragId=null;
-function dropOn(k){if(!dragId)return;const x=S.posts.find(p=>p.id===dragId);dragId=null;if(!x)return;const old=x.at;x.at=k+'T'+x.at.slice(11,16);const c=conflicts(x);save();render();toast(c?'تم النقل. تنبيه: يوجد بوست آخر بنفس الحساب والوقت':'تم نقل البوست إلى '+k)}
+function dropOn(k){if(!dragId)return;const x=S.posts.find(p=>p.id===dragId);dragId=null;if(!x)return;const old=x.at;x.at=k+'T'+x.at.slice(11,16);const c=conflicts(x).length;save();render();toast(c?'تم النقل. تنبيه: يوجد بوست آخر بنفس الحساب والوقت':'تم نقل البوست إلى '+k)}
 function conflicts(x){return S.posts.filter(y=>y.id!==x.id&&y.at===x.at&&y.a.some(q=>x.a.includes(q)))}
 function vCal(){
  const base=new Date();let html=stats();
